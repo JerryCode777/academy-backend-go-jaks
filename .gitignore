@@ -1,0 +1,64 @@
+# Binarios
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, construido con `go test -c`
+*.test
+
+# Output del coverage de go
+*.out
+
+# Directorios de dependencias (reemplazados por Go modules)
+vendor/
+
+# Archivos específicos de Go
+go.sum
+
+# Variables de entorno
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Archivos temporales
+tmp/
+temp/
+
+# Archivos de configuración local
+config/local.yaml
+config/local.json
+
+# Archivos de backup
+*.bak
+*.backup
+
+# Docker
+docker-compose.override.yml
