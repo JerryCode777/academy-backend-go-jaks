@@ -12,7 +12,7 @@ Este proyecto será desarrollado por un equipo de 2 desarrolladoras utilizando G
 - **Arquitectura**: Clean Architecture / Hexagonal Architecture
 - **API**: RESTful con posibilidad de GraphQL
 
-## Estructura del Proyecto
+## Estructura del Proyecto - Esto puede ser modificado
 ```
 backend-academi/
 ├── cmd/academi/           # Punto de entrada de la aplicación
