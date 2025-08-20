@@ -1,31 +1,109 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
+
+	"backend-academi/configs"
+	"backend-academi/internal/auth"
+	"backend-academi/internal/handlers"
+	"backend-academi/internal/models"
+	"backend-academi/internal/repository"
+	"backend-academi/pkg/database"
+	"backend-academi/pkg/middleware"
+	"backend-academi/pkg/utils"
 )
 
-// main es el punto de entrada de la aplicación Academi
 func main() {
-	// Inicializar router
+	// 1. Cargar configuración desde variables de entorno
+	log.Println("Cargando configuración...")
+	config, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatal("Error loading configuration:", err)
+	}
+	log.Printf("Configuración cargada - API Base: %s, Puerto: %d", 
+		config.Server.APIBasePath, config.Server.Port)
+
+	// 2. Conectar a la base de datos
+	log.Println("Conectando a PostgreSQL...")
+	db, err := database.Connect(&config.Database)
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	log.Println("Conexión a base de datos establecida")
+
+	// 3. Ejecutar migraciones automáticas
+	if err := runMigrations(db); err != nil {
+		log.Fatal("Error running migrations:", err)
+	}
+
+	// 4. Inicializar servicios (Dependency Injection)
+	log.Println("Inicializando servicios...")
+	hashService := utils.NewHashService()
+	jwtService := utils.NewJWTService(config.JWT.SecretKey, config.JWT.Issuer)
+	userRepo := repository.NewUserRepository(db)
+	authService := auth.NewAuthService(userRepo, hashService, jwtService)
+	
+	// 5. Inicializar handlers
+	authHandler := handlers.NewAuthHandler(authService)
+	
+	// 6. Inicializar middleware
+	authMiddleware := middleware.NewAuthMiddleware(authService)
+
+	// 7. Configurar router y rutas
 	router := mux.NewRouter()
 	
-	// TODO: Configurar rutas de la API
+	// Health check (sin autenticación)
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 	
-	// TODO: Configurar middleware
-	// TODO: Configurar conexión a base de datos
-	// TODO: Configurar servicios
+	// Subrouter para API con el base path configurable
+	apiRouter := router.PathPrefix(config.Server.APIBasePath).Subrouter()
 	
-	log.Println("Servidor iniciando en puerto 8080...")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	// Rutas de autenticación (sin middleware)
+	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/register", authHandler.Register).Methods("POST")
+	authRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
+	
+	// Rutas protegidas (CON middleware de autenticación)
+	protectedRouter := apiRouter.PathPrefix("/auth").Subrouter()
+	protectedRouter.Use(authMiddleware.RequireAuth)
+	protectedRouter.HandleFunc("/me", authHandler.Me).Methods("GET")
+	
+	// TODO: Después de la decisión sobre logout
+	// protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST")
+
+	// 8. Configurar servidor
+	serverAddr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
+	
+	log.Printf("Servidor iniciando en %s", serverAddr)
+	log.Printf("Rutas disponibles:")
+	log.Printf("   GET  /health")
+	log.Printf("   POST %s/auth/register", config.Server.APIBasePath)
+	log.Printf("   POST %s/auth/login", config.Server.APIBasePath)
+	log.Printf("   GET  %s/auth/me (requiere auth)", config.Server.APIBasePath)
+	
+	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
 
 // healthCheck endpoint básico para verificar que el servidor está funcionando
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "service": "academi-backend"}`))
+	w.Write([]byte(`{"status": "ok", "service": "academi-backend", "version": "1.0.0"}`))
+}
+
+// runMigrations ejecuta las migraciones automáticas de GORM
+func runMigrations(db *gorm.DB) error {
+	log.Println("Ejecutando migraciones de base de datos...")
+	
+	// GORM creará las tablas automáticamente basándose en los modelos
+	return db.AutoMigrate(
+		&models.User{},
+		&models.Student{},
+		// TODO: Agregar más modelos cuando se implementen (Course, Quiz, etc.)
+	)
 }
