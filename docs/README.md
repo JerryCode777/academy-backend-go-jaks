@@ -35,13 +35,47 @@ backend-academi/
 ```
 
 ## Instalación y Configuración
-[Por completar]
 
-## API Endpoints
-[Por completar]
+### Prerequisitos
+- Go 1.21+
+- PostgreSQL 14+
 
-## Testing
-[Por completar]
+### Pasos básicos
+```bash
+# 1. Instalar dependencias
+make deps
 
-## Deployment
-[Por completar]
+# 2. Configurar variables de entorno (ver DEPLOYMENT.md)
+cp .env.dev .env
+# Editar .env con tus configuraciones
+
+# 3. Ejecutar aplicación
+make run
+```
+
+## Comandos Principales
+
+```bash
+make deps          # Descargar dependencias
+make run           # Ejecutar aplicación
+make build         # Compilar binario
+make test          # Ejecutar tests
+make clean         # Limpiar archivos generados
+```
+
+## Documentación
+
+- **[API.md](./API.md)** - Endpoints, requests/responses, autenticación
+- **[DATABASE.md](./DATABASE.md)** - Configuración BD, modelos, migraciones  
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Variables de entorno, configuración producción
+
+## Estado Actual
+
+### Funcionalidades Implementadas
+- Sistema de autenticación completo (registro, login, JWT)
+- Middleware de autenticación para rutas protegidas
+- Configuración centralizada con variables de entorno
+- Migraciones automáticas de base de datos
+
+### Decisiones Pendientes
+- **Logout server-side**: ¿Implementar blacklist de tokens? (Consultar superior)
