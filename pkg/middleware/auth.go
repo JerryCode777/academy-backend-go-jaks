@@ -4,16 +4,19 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"backend-academi/internal/auth"
 )
 
 // AuthMiddleware maneja la autenticación de requests
 type AuthMiddleware struct {
-	// TODO: Agregar dependencias como AuthService
+	authService *auth.AuthService
 }
 
 // NewAuthMiddleware crea una nueva instancia del middleware de auth
-func NewAuthMiddleware() *AuthMiddleware {
-	return &AuthMiddleware{}
+func NewAuthMiddleware(authService *auth.AuthService) *AuthMiddleware {
+	return &AuthMiddleware{
+		authService: authService,
+	}
 }
 
 // RequireAuth middleware que requiere autenticación
@@ -35,22 +38,16 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		token := tokenParts[1]
 		
-		// TODO: Validar token con AuthService
-		// user, err := m.authService.ValidateToken(token)
-		// if err != nil {
-		//     http.Error(w, "Invalid token", http.StatusUnauthorized)
-		//     return
-		// }
-
-		// TODO: Agregar user al context
-		// ctx := context.WithValue(r.Context(), "user", user)
-		// r = r.WithContext(ctx)
-
-		// Por ahora, solo verificar que el token no esté vacío
-		if token == "" {
-			http.Error(w, "Token is required", http.StatusUnauthorized)
+		// Validar token con AuthService
+		user, err := m.authService.ValidateToken(token)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
+
+		// Agregar user al context para usar en handlers
+		ctx := context.WithValue(r.Context(), "user", user)
+		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})
