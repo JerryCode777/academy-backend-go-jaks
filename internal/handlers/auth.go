@@ -1,0 +1,148 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"backend-academi/internal/auth"
+)
+
+// AuthHandler maneja todos los endpoints relacionados con autenticación
+type AuthHandler struct {
+	authService *auth.AuthService
+}
+
+// NewAuthHandler crea una nueva instancia del handler de auth
+func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
+	return &AuthHandler{
+		authService: authService,
+	}
+}
+
+// Register maneja el endpoint POST /api/auth/register
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// 1. Verificar Content-Type
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Decodificar JSON del body
+	var req auth.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Validaciones básicas
+	if req.Email == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" {
+		http.Error(w, "All fields are required", http.StatusBadRequest)
+		return
+	}
+
+	// 4. Llamar al servicio de autenticación
+	user, err := h.authService.Register(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// 5. Responder con el usuario creado
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
+}
+
+// Login maneja el endpoint POST /api/auth/login
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// 1. Verificar Content-Type
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Decodificar JSON del body
+	var req auth.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Validaciones básicas
+	if req.Email == "" || req.Password == "" {
+		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		return
+	}
+
+	// 4. Llamar al servicio de autenticación
+	loginResponse, err := h.authService.Login(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// 5. Responder con token y datos del usuario
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(loginResponse)
+}
+
+// Me maneja el endpoint GET /api/auth/me
+// Requiere autenticación (middleware AuthMiddleware.RequireAuth)
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	// 1. Obtener token del header Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header required", http.StatusUnauthorized)
+		return
+	}
+
+	// 2. Extraer token
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
+		return
+	}
+
+	// 3. Validar token y obtener usuario actual
+	user, err := h.authService.ValidateToken(tokenParts[1])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// 4. Responder con datos del usuario
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+}
+
+// TODO: Logout endpoint - Aquí iría la implementación con blacklist
+// func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+//     // 1. Obtener token del header
+//     authHeader := r.Header.Get("Authorization")
+//     if authHeader == "" {
+//         http.Error(w, "Authorization header required", http.StatusUnauthorized)
+//         return
+//     }
+//
+//     tokenParts := strings.Split(authHeader, " ")
+//     if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+//         http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
+//         return
+//     }
+//
+//     // 2. Invalidar token (blacklist)
+//     err := h.authService.Logout(tokenParts[1])
+//     if err != nil {
+//         http.Error(w, err.Error(), http.StatusInternalServerError)
+//         return
+//     }
+//
+//     // 3. Responder éxito
+//     w.Header().Set("Content-Type", "application/json")
+//     w.WriteHeader(http.StatusOK)
+//     json.NewEncoder(w).Encode(map[string]string{
+//         "message": "Successfully logged out",
+//     })
+// }
