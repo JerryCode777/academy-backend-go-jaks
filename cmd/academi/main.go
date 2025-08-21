@@ -43,16 +43,21 @@ func main() {
 
 	// 4. Inicializar servicios (Dependency Injection)
 	log.Println("Inicializando servicios...")
-	hashService := utils.NewHashService()
 	jwtService := utils.NewJWTService(config.JWT.SecretKey, config.JWT.Issuer)
+	
+	// Repositories
 	userRepo := repository.NewUserRepository(db)
-	authService := auth.NewAuthService(userRepo, hashService, jwtService)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
+	blacklistRepo := repository.NewTokenBlacklistRepository(db)
+	
+	// Services
+	authService := auth.NewAuthService(userRepo, refreshTokenRepo, blacklistRepo, jwtService)
 	
 	// 5. Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	
 	// 6. Inicializar middleware
-	authMiddleware := middleware.NewAuthMiddleware(authService)
+	authMiddleware := middleware.NewAuthMiddleware(authService, jwtService)
 
 	// 7. Configurar router y rutas
 	router := mux.NewRouter()
@@ -67,14 +72,13 @@ func main() {
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/register", authHandler.Register).Methods("POST")
 	authRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
+	authRouter.HandleFunc("/refresh", authHandler.RefreshToken).Methods("POST")
 	
 	// Rutas protegidas (CON middleware de autenticación)
 	protectedRouter := apiRouter.PathPrefix("/auth").Subrouter()
 	protectedRouter.Use(authMiddleware.RequireAuth)
 	protectedRouter.HandleFunc("/me", authHandler.Me).Methods("GET")
-	
-	// TODO: Después de la decisión sobre logout
-	// protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST")
+	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST")
 
 	// 8. Configurar servidor
 	serverAddr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
@@ -84,7 +88,9 @@ func main() {
 	log.Printf("   GET  /health")
 	log.Printf("   POST %s/auth/register", config.Server.APIBasePath)
 	log.Printf("   POST %s/auth/login", config.Server.APIBasePath)
+	log.Printf("   POST %s/auth/refresh", config.Server.APIBasePath)
 	log.Printf("   GET  %s/auth/me (requiere auth)", config.Server.APIBasePath)
+	log.Printf("   POST %s/auth/logout (requiere auth)", config.Server.APIBasePath)
 	
 	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
@@ -104,6 +110,8 @@ func runMigrations(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.Student{},
+		&models.RefreshToken{},
+		&models.TokenBlacklist{},
 		// TODO: Agregar más modelos cuando se implementen (Course, Quiz, etc.)
 	)
 }
