@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -62,8 +63,13 @@ func main() {
 	// 7. Configurar router y rutas
 	router := mux.NewRouter()
 	
-	// Health check (sin autenticación)
-	router.HandleFunc("/health", healthCheck).Methods("GET")
+	// CORS para permitir conexiones desde web
+	router.Use(corsMiddleware)
+	
+	// Rutas básicas (de conexion-frontend)
+	router.HandleFunc("/", homeHandler).Methods("GET")
+	router.HandleFunc("/health", healthHandler).Methods("GET")
+	router.HandleFunc("/api/test", testHandler).Methods("GET")
 	
 	// Subrouter para API con el base path configurable
 	apiRouter := router.PathPrefix(config.Server.APIBasePath).Subrouter()
@@ -83,9 +89,11 @@ func main() {
 	// 8. Configurar servidor
 	serverAddr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 	
-	log.Printf("Servidor iniciando en %s", serverAddr)
+	log.Printf("🚀 Servidor iniciando en %s", serverAddr)
 	log.Printf("Rutas disponibles:")
-	log.Printf("   GET  /health")
+	log.Printf("   GET  / - Página de inicio")
+	log.Printf("   GET  /health - Health check")
+	log.Printf("   GET  /api/test - Endpoint de prueba")
 	log.Printf("   POST %s/auth/register", config.Server.APIBasePath)
 	log.Printf("   POST %s/auth/login", config.Server.APIBasePath)
 	log.Printf("   POST %s/auth/refresh", config.Server.APIBasePath)
@@ -95,11 +103,52 @@ func main() {
 	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
 
-// healthCheck endpoint básico para verificar que el servidor está funcionando
-func healthCheck(w http.ResponseWriter, r *http.Request) {
+// CORS middleware para conexión web
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Página de inicio
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]string{
+		"message": "Bienvenido a Academi Backend API",
+		"version": "1.0.0",
+		"status":  "running",
+	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "service": "academi-backend", "version": "1.0.0"}`))
+	json.NewEncoder(w).Encode(response)
+}
+
+// Verificar estado del servidor  
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]string{
+		"status":  "ok",
+		"service": "academi-backend",
+		"version": "1.0.0",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Endpoint de prueba para la web
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"message": "¡Conexión exitosa desde la web!",
+		"data":    []string{"estudiante1", "estudiante2", "estudiante3"},
+		"success": true,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // runMigrations ejecuta las migraciones automáticas de GORM
