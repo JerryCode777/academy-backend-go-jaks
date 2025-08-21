@@ -5,17 +5,20 @@ import (
 	"net/http"
 	"strings"
 	"backend-academi/internal/auth"
+	"backend-academi/pkg/utils"
 )
 
 // AuthMiddleware maneja la autenticación de requests
 type AuthMiddleware struct {
 	authService *auth.AuthService
+	jwtService  *utils.JWTService
 }
 
 // NewAuthMiddleware crea una nueva instancia del middleware de auth
-func NewAuthMiddleware(authService *auth.AuthService) *AuthMiddleware {
+func NewAuthMiddleware(authService *auth.AuthService, jwtService *utils.JWTService) *AuthMiddleware {
 	return &AuthMiddleware{
 		authService: authService,
+		jwtService:  jwtService,
 	}
 }
 
@@ -38,15 +41,28 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 
 		token := tokenParts[1]
 		
-		// Validar token con AuthService
-		user, err := m.authService.ValidateToken(token)
+		// Validar token JWT y extraer claims
+		claims, err := m.jwtService.ValidateToken(token)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		// Agregar user al context para usar en handlers
-		ctx := context.WithValue(r.Context(), "user", user)
+		// Verificar blacklist para usuarios privilegiados
+		if utils.IsPrivilegedUser(claims.Role) {
+			isBlacklisted, err := m.authService.IsTokenBlacklisted(claims.ID, claims.Role)
+			if err != nil {
+				http.Error(w, "Token validation error", http.StatusInternalServerError)
+				return
+			}
+			if isBlacklisted {
+				http.Error(w, "Token has been revoked", http.StatusUnauthorized)
+				return
+			}
+		}
+
+		// Agregar claims al context para usar en handlers
+		ctx := context.WithValue(r.Context(), "user_claims", claims)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
