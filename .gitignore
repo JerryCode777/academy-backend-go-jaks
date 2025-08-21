@@ -23,6 +23,7 @@ go.sum
 .env.development
 .env.test
 .env.production
+.env.*
 
 # Logs
 *.log
