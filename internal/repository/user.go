@@ -6,13 +6,23 @@ import (
 	"gorm.io/gorm"
 )
 
+// UserRepositoryInterface define las operaciones del repositorio de usuarios
+type UserRepositoryInterface interface {
+	Create(user *models.User) error
+	GetByEmail(email string) (*models.User, error)
+	GetByID(id uint) (*models.User, error)
+	Exists(email string) (bool, error)
+	Update(user *models.User) error
+	Delete(id uint) error
+}
+
 // UserRepository maneja todas las operaciones de base de datos para usuarios
 type UserRepository struct {
 	db *gorm.DB
 }
 
 // NewUserRepository crea una nueva instancia del repositorio de usuarios
-func NewUserRepository(db *gorm.DB) *UserRepository {
+func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 	return &UserRepository{db: db}
 }
 

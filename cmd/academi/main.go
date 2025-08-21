@@ -13,6 +13,7 @@ import (
 	"backend-academi/internal/handlers"
 	"backend-academi/internal/models"
 	"backend-academi/internal/repository"
+	"backend-academi/internal/services"
 	"backend-academi/pkg/database"
 	"backend-academi/pkg/middleware"
 	"backend-academi/pkg/utils"
@@ -49,13 +50,16 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
 	blacklistRepo := repository.NewTokenBlacklistRepository(db)
+	questionnaireRepo := repository.NewQuestionnaireRepository(db)
 	
 	// Services
 	authService := auth.NewAuthService(userRepo, refreshTokenRepo, blacklistRepo, jwtService)
+	questionnaireService := services.NewQuestionnaireService(questionnaireRepo, userRepo)
 	
 	// 5. Inicializar handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	basicHandler := handlers.NewBasicHandler()
+	questionnaireHandler := handlers.NewQuestionnaireHandler(questionnaireService)
 	
 	// 6. Inicializar middleware
 	authMiddleware := middleware.NewAuthMiddleware(authService, jwtService)
@@ -79,15 +83,31 @@ func main() {
 	
 	// Rutas de autenticación (sin middleware)
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
-	authRouter.HandleFunc("/register", authHandler.Register).Methods("POST")
-	authRouter.HandleFunc("/login", authHandler.Login).Methods("POST")
-	authRouter.HandleFunc("/refresh", authHandler.RefreshToken).Methods("POST")
+	authRouter.Use(corsMiddleware.Handler) // Aplicar CORS también a subrouters
+	authRouter.HandleFunc("/register", authHandler.Register).Methods("POST", "OPTIONS")
+	authRouter.HandleFunc("/login", authHandler.Login).Methods("POST", "OPTIONS")
+	authRouter.HandleFunc("/refresh", authHandler.RefreshToken).Methods("POST", "OPTIONS")
 	
 	// Rutas protegidas (CON middleware de autenticación)
 	protectedRouter := apiRouter.PathPrefix("/auth").Subrouter()
+	protectedRouter.Use(corsMiddleware.Handler) // Aplicar CORS
 	protectedRouter.Use(authMiddleware.RequireAuth)
-	protectedRouter.HandleFunc("/me", authHandler.Me).Methods("GET")
-	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST")
+	protectedRouter.HandleFunc("/me", authHandler.Me).Methods("GET", "OPTIONS")
+	protectedRouter.HandleFunc("/logout", authHandler.Logout).Methods("POST", "OPTIONS")
+	
+	// Rutas de cuestionarios públicas (sin autenticación)
+	questionnairePublicRouter := apiRouter.PathPrefix("/questionnaire").Subrouter()
+	questionnairePublicRouter.Use(corsMiddleware.Handler) // Aplicar CORS
+	questionnairePublicRouter.HandleFunc("/initial/public", questionnaireHandler.GetInitialQuestionnairePublic).Methods("GET", "OPTIONS")
+	
+	// Rutas de cuestionarios protegidas (CON middleware de autenticación)
+	questionnaireRouter := apiRouter.PathPrefix("/questionnaire").Subrouter()
+	questionnaireRouter.Use(corsMiddleware.Handler) // Aplicar CORS
+	questionnaireRouter.Use(authMiddleware.RequireAuth)
+	questionnaireRouter.HandleFunc("/initial", questionnaireHandler.GetInitialQuestionnaire).Methods("GET", "OPTIONS")
+	questionnaireRouter.HandleFunc("/initial/submit", questionnaireHandler.SubmitInitialQuestionnaire).Methods("POST", "OPTIONS")
+	questionnaireRouter.HandleFunc("/initial/status", questionnaireHandler.CheckInitialCompletion).Methods("GET", "OPTIONS")
+	questionnaireRouter.HandleFunc("/initial/response", questionnaireHandler.GetUserInitialResponse).Methods("GET", "OPTIONS")
 
 	// 8. Configurar servidor
 	serverAddr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
@@ -102,6 +122,11 @@ func main() {
 	log.Printf("   POST %s/auth/refresh", config.Server.APIBasePath)
 	log.Printf("   GET  %s/auth/me (requiere auth)", config.Server.APIBasePath)
 	log.Printf("   POST %s/auth/logout (requiere auth)", config.Server.APIBasePath)
+	log.Printf("   GET  %s/questionnaire/initial/public - Cuestionario inicial público", config.Server.APIBasePath)
+	log.Printf("   GET  %s/questionnaire/initial (requiere auth)", config.Server.APIBasePath)
+	log.Printf("   POST %s/questionnaire/initial/submit (requiere auth)", config.Server.APIBasePath)
+	log.Printf("   GET  %s/questionnaire/initial/status (requiere auth)", config.Server.APIBasePath)
+	log.Printf("   GET  %s/questionnaire/initial/response (requiere auth)", config.Server.APIBasePath)
 	
 	log.Fatal(http.ListenAndServe(serverAddr, router))
 }
@@ -117,6 +142,8 @@ func runMigrations(db *gorm.DB) error {
 		&models.Student{},
 		&models.RefreshToken{},
 		&models.TokenBlacklist{},
+		&models.Questionnaire{},
+		&models.QuestionnaireResponse{},
 		// TODO: Agregar más modelos cuando se implementen (Course, Quiz, etc.)
 	)
 }

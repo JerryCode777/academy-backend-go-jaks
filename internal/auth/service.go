@@ -14,7 +14,7 @@ import (
 
 // AuthService maneja la lógica de autenticación y autorización
 type AuthService struct {
-	userRepo         *repository.UserRepository
+	userRepo         repository.UserRepositoryInterface
 	refreshTokenRepo *repository.RefreshTokenRepository
 	blacklistRepo    *repository.TokenBlacklistRepository
 	jwtService       *utils.JWTService
@@ -22,7 +22,7 @@ type AuthService struct {
 
 // NewAuthService crea una nueva instancia del servicio de autenticación
 func NewAuthService(
-	userRepo *repository.UserRepository,
+	userRepo repository.UserRepositoryInterface,
 	refreshTokenRepo *repository.RefreshTokenRepository,
 	blacklistRepo *repository.TokenBlacklistRepository,
 	jwtService *utils.JWTService,
