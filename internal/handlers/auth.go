@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"backend-academi/internal/auth"
+	"backend-academi/pkg/utils"
 )
 
 // AuthHandler maneja todos los endpoints relacionados con autenticación
@@ -117,32 +118,65 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-// TODO: Logout endpoint - Aquí iría la implementación con blacklist
-// func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-//     // 1. Obtener token del header
-//     authHeader := r.Header.Get("Authorization")
-//     if authHeader == "" {
-//         http.Error(w, "Authorization header required", http.StatusUnauthorized)
-//         return
-//     }
-//
-//     tokenParts := strings.Split(authHeader, " ")
-//     if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-//         http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
-//         return
-//     }
-//
-//     // 2. Invalidar token (blacklist)
-//     err := h.authService.Logout(tokenParts[1])
-//     if err != nil {
-//         http.Error(w, err.Error(), http.StatusInternalServerError)
-//         return
-//     }
-//
-//     // 3. Responder éxito
-//     w.Header().Set("Content-Type", "application/json")
-//     w.WriteHeader(http.StatusOK)
-//     json.NewEncoder(w).Encode(map[string]string{
-//         "message": "Successfully logged out",
-//     })
-// }
+// RefreshToken maneja el endpoint POST /api/auth/refresh
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
+		return
+	}
+
+	var req auth.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	if req.RefreshToken == "" {
+		http.Error(w, "Refresh token is required", http.StatusBadRequest)
+		return
+	}
+
+	loginResponse, err := h.authService.RefreshToken(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(loginResponse)
+}
+
+// Logout maneja el endpoint POST /api/auth/logout
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header required", http.StatusUnauthorized)
+		return
+	}
+
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
+		return
+	}
+
+	// Extraer userID y role desde el context (puesto por el middleware)
+	userClaims, ok := r.Context().Value("user_claims").(*utils.Claims)
+	if !ok {
+		http.Error(w, "Unable to get user information", http.StatusInternalServerError)
+		return
+	}
+
+	err := h.authService.Logout(tokenParts[1], userClaims.UserID, userClaims.Role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Successfully logged out",
+	})
+}
