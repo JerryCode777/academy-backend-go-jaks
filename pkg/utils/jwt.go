@@ -3,6 +3,8 @@ package utils
 import (
 	"time"
 	"errors"
+	"crypto/rand"
+	"encoding/hex"
 	"backend-academi/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -31,10 +33,24 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// generateJTI genera un ID único para el JWT
+func generateJTI() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 // GenerateToken crea un JWT con los datos del usuario
-// Expiración: 24 horas desde la creación
+// Expiración: 15 minutos para tokens de acceso
 func (j *JWTService) GenerateToken(user *models.User) (string, time.Time, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(15 * time.Minute)
+	
+	jti, err := generateJTI()
+	if err != nil {
+		return "", time.Time{}, err
+	}
 	
 	claims := &Claims{
 		UserID:    user.ID,
@@ -43,6 +59,7 @@ func (j *JWTService) GenerateToken(user *models.User) (string, time.Time, error)
 		LastName:  user.LastName,
 		Role:      user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jti,
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    j.issuer,
@@ -79,4 +96,18 @@ func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+// GenerateRefreshToken genera un token de actualización aleatorio
+func (j *JWTService) GenerateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// IsPrivilegedUser verifica si el usuario requiere blacklist (admin o teacher)
+func IsPrivilegedUser(role models.UserRole) bool {
+	return role == models.AdminRole || role == models.TeacherRole
 }
