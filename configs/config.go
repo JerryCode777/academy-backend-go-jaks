@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
-	
+
 	"github.com/joho/godotenv"
 )
 
@@ -21,14 +21,14 @@ type DatabaseConfig struct {
 	Host     string
 	Port     int
 	User     string
-	Password string // ⚠️  DEBE venir de env var
+	Password string // DEBE venir de env var
 	DBName   string
 	SSLMode  string
 }
 
 // JWTConfig configuración para JWT
 type JWTConfig struct {
-	SecretKey string // ⚠️  CRÍTICO: debe venir de env var
+	SecretKey string // CRÍTICO: debe venir de env var
 	Issuer    string
 	ExpiresIn int // en horas
 }
@@ -50,21 +50,21 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),        // Opcional: default localhost para dev
-			Port:     getEnvInt("DB_PORT", 5432),           // Opcional: default Puerto PostgreSQL estándar
-			User:     getEnv("DB_USER", "postgres"),        // Opcional: default Usuario PostgreSQL estándar
-			Password: getEnv("DB_PASSWORD", ""),            // 🚨 OBLIGATORIO: Sin default por seguridad
-			DBName:   getEnv("DB_NAME", "academi"),         // Opcional: default Nombre del proyecto
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),      // Opcional: disable para dev, require para prod
+			Host:     getEnv("DB_HOST", "localhost"),  // Opcional: default localhost para dev
+			Port:     getEnvInt("DB_PORT", 5432),      // Opcional: default Puerto PostgreSQL estándar
+			User:     getEnv("DB_USER", "postgres"),   // Opcional: default Usuario PostgreSQL estándar
+			Password: getEnv("DB_PASSWORD", ""),       // BLIGATORIO: Sin default por seguridad
+			DBName:   getEnv("DB_NAME", "academi"),    // Opcional: default Nombre del proyecto
+			SSLMode:  getEnv("DB_SSLMODE", "disable"), // Opcional: disable para dev, require para prod
 		},
 		JWT: JWTConfig{
-			SecretKey: getEnv("JWT_SECRET_KEY", ""),        // 🚨 OBLIGATORIO: Sin default por seguridad crítica
+			SecretKey: getEnv("JWT_SECRET_KEY", ""),            // OBLIGATORIO: Sin default por seguridad crítica
 			Issuer:    getEnv("JWT_ISSUER", "academi-backend"), // Opcional: default Identificador del proyecto
-			ExpiresIn: getEnvInt("JWT_EXPIRES_HOURS", 24),  // Opcional: default 24 horas
+			ExpiresIn: getEnvInt("JWT_EXPIRES_HOURS", 24),      // Opcional: default 24 horas
 		},
 		Server: ServerConfig{
-			Port:        getEnvInt("SERVER_PORT", 8080),    // Opcional: default Puerto estándar desarrollo
-			Host:        getEnv("SERVER_HOST", "0.0.0.0"),  // Opcional: default Bind todas las interfaces
+			Port:        getEnvInt("SERVER_PORT", 8080),     // Opcional: default Puerto estándar desarrollo
+			Host:        getEnv("SERVER_HOST", "0.0.0.0"),   // Opcional: default Bind todas las interfaces
 			APIBasePath: getEnv("API_BASE_PATH", "/api/v1"), // Opcional: default Estándar versionado
 		},
 	}
@@ -82,7 +82,7 @@ func (c *Config) Validate() error {
 	if c.JWT.SecretKey == "" {
 		return errors.New("JWT_SECRET_KEY environment variable is required")
 	}
-	
+
 	if len(c.JWT.SecretKey) < 32 {
 		return errors.New("JWT_SECRET_KEY must be at least 32 characters long for security")
 	}
