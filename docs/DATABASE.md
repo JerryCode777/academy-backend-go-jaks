@@ -51,6 +51,8 @@ Al arrancar la aplicación, se ejecutan automáticamente:
 db.AutoMigrate(
     &models.User{},
     &models.Student{},
+    &models.RefreshToken{},
+    &models.TokenBlacklist{},
 )
 ```
 
@@ -120,9 +122,33 @@ docker run --name postgres-academi \
 
 ## Esquema de Tablas
 
-Las tablas se crean automáticamente desde los modelos Go:
-- Ver `internal/models/` para estructura actual
-- Migraciones manuales futuras se documentarán aquí
+### Tablas Actuales
+
+#### refresh_tokens **NUEVA**
+Tokens de actualización para el sistema híbrido:
+```sql
+-- Campos para gestión de sesiones
+id, token (unique + index), user_id (FK), expires_at
+is_revoked, created_at, updated_at
+```
+
+#### token_blacklist **NUEVA**
+Blacklist de JWTs para usuarios privilegiados:
+```sql
+-- Solo para admin/teacher
+id, jti (unique + index), token, user_id (FK)
+expires_at (index), created_at
+```
+
+### Índices Automáticos
+- `refresh_tokens.token` - Para búsquedas rápidas de refresh tokens
+- `token_blacklist.jti` - Para verificación rápida de blacklist
+- `token_blacklist.expires_at` - Para limpieza automática de tokens expirados
+
+### Estrategia de Limpieza
+Las tablas nuevas incluyen métodos para limpiar automáticamente registros expirados:
+- `RefreshTokenRepository.CleanupExpired()`
+- `TokenBlacklistRepository.CleanupExpired()`
 
 ## Troubleshooting
 
