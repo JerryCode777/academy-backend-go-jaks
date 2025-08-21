@@ -72,10 +72,25 @@ make clean         # Limpiar archivos generados
 ## Estado Actual
 
 ### Funcionalidades Implementadas
-- Sistema de autenticación completo (registro, login, JWT)
+- Sistema de autenticación completo (registro, login, JWT, refresh tokens)
+- Logout híbrido (elimina refresh tokens + blacklist para usuarios privilegiados)
 - Middleware de autenticación para rutas protegidas
+- **Conexión con frontend habilitada** (CORS configurado)
+- Endpoints básicos de prueba para validar conexión
 - Configuración centralizada con variables de entorno
 - Migraciones automáticas de base de datos
+- Arquitectura modularizada y escalable
 
-### Decisiones Pendientes
-- **Logout server-side**: ¿Implementar blacklist de tokens? (Consultar superior)
+### Endpoints de Conexión Frontend
+- `GET /` - Página de bienvenida
+- `GET /health` - Health check para monitoreo
+- `GET {API_BASE_PATH}/test` - Endpoint de prueba para validar conexión frontend
+- Todos los endpoints auth funcionan con CORS habilitado
+
+### CORS y Frontend
+✅ **Conexión frontend lista**: El backend está configurado con CORS para permitir conexiones desde aplicaciones web.
+
+**Headers CORS configurados:**
+- `Access-Control-Allow-Origin: *`
+- `Access-Control-Allow-Methods: GET, POST, OPTIONS`  
+- `Access-Control-Allow-Headers: Content-Type, Authorization`
