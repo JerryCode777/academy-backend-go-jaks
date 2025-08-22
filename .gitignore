@@ -63,3 +63,6 @@ config/local.json
 
 # Docker
 docker-compose.override.yml
+
+# Claude context file (no commitear)
+CLAUDE.md
