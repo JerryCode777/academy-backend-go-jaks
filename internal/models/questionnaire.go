@@ -56,10 +56,9 @@ type QuestionnaireResponse struct {
 	StudyHoursPerDay    int                 `json:"study_hours_per_day" gorm:"not null"`
 	TimePreference      StudyTimePreference `json:"time_preference" gorm:"not null"`
 	PrimaryGoal         StudyGoalType       `json:"primary_goal" gorm:"not null"`
-	SecondaryGoal       *StudyGoalType      `json:"secondary_goal,omitempty" gorm:"null"`
 	
 	// Campos adicionales
-	CurrentLevel        string              `json:"current_level" gorm:"null"`        // Nivel académico actual
+	CurrentLevel        string              `json:"current_level" gorm:"not null"`    // Nivel académico actual
 	SubjectsOfInterest  string              `json:"subjects_of_interest" gorm:"text"` // JSON array de materias
 	AdditionalComments  string              `json:"additional_comments" gorm:"text"`  // Comentarios adicionales
 	
@@ -73,8 +72,7 @@ type InitialQuestionnaireRequest struct {
 	StudyHoursPerDay   int                 `json:"study_hours_per_day" validate:"required,min=1,max=12"`
 	TimePreference     StudyTimePreference `json:"time_preference" validate:"required"`
 	PrimaryGoal        StudyGoalType       `json:"primary_goal" validate:"required"`
-	SecondaryGoal      *StudyGoalType      `json:"secondary_goal,omitempty"`
-	CurrentLevel       string              `json:"current_level,omitempty"`
+	CurrentLevel       string              `json:"current_level" validate:"required"`
 	SubjectsOfInterest []string            `json:"subjects_of_interest,omitempty"`
 	AdditionalComments string              `json:"additional_comments,omitempty"`
 }

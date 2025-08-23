@@ -94,7 +94,6 @@ func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *
 		StudyHoursPerDay:   request.StudyHoursPerDay,
 		TimePreference:     request.TimePreference,
 		PrimaryGoal:        request.PrimaryGoal,
-		SecondaryGoal:      request.SecondaryGoal,
 		CurrentLevel:       request.CurrentLevel,
 		SubjectsOfInterest: subjectsJSON,
 		AdditionalComments: request.AdditionalComments,
@@ -141,90 +140,71 @@ func (s *questionnaireService) buildInitialQuestionnaireQuestions() []models.Que
 	return []models.QuestionInfo{
 		{
 			ID:       "study_hours_per_day",
-			Text:     "¿Cuántas horas puedes dedicar al estudio por día?",
+			Text:     "¿Cuánto tiempo puedes dedicar al estudio cada día?",
 			Type:     "select",
 			Required: true,
 			Options: []models.OptionInfo{
-				{Value: "1", Label: "1 hora"},
-				{Value: "2", Label: "2 horas"},
-				{Value: "3", Label: "3 horas"},
-				{Value: "4", Label: "4 horas"},
-				{Value: "5", Label: "5 horas"},
-				{Value: "6", Label: "6+ horas"},
+				{Value: "1", Label: "1 hora - Sesiones cortas y efectivas"},
+				{Value: "2", Label: "2 horas - Balance perfecto"},
+				{Value: "3", Label: "3 horas - Estudio profundo"},
+				{Value: "4", Label: "4 horas - Preparación intensiva"},
+				{Value: "5", Label: "5+ horas - Dedicación completa"},
 			},
 		},
 		{
 			ID:       "time_preference",
-			Text:     "¿Cuál es tu horario preferido para estudiar?",
+			Text:     "¿En qué momento del día te sientes más concentrado?",
 			Type:     "select",
 			Required: true,
 			Options: []models.OptionInfo{
-				{Value: "morning", Label: "Mañana (6:00 - 12:00)"},
-				{Value: "afternoon", Label: "Tarde (12:00 - 18:00)"},
-				{Value: "evening", Label: "Noche (18:00 - 22:00)"},
-				{Value: "night", Label: "Madrugada (22:00 - 6:00)"},
+				{Value: "morning", Label: "Mañana temprano - Mente fresca y energizada"},
+				{Value: "afternoon", Label: "Tarde - Después del almuerzo"},
+				{Value: "evening", Label: "Noche - Ambiente tranquilo"},
+				{Value: "night", Label: "Madrugada - Sin distracciones"},
 			},
 		},
 		{
 			ID:       "primary_goal",
-			Text:     "¿Cuál es tu objetivo principal?",
+			Text:     "¿Qué te motiva a estudiar en este momento?",
 			Type:     "select",
 			Required: true,
 			Options: []models.OptionInfo{
-				{Value: "pass_exam", Label: "Aprobar un examen específico"},
-				{Value: "reinforce_course", Label: "Reforzar conocimientos de un curso"},
-				{Value: "learn_new_topic", Label: "Aprender un tema nuevo"},
-				{Value: "improve_grades", Label: "Mejorar mis calificaciones"},
+				{Value: "pass_exam", Label: "Aprobar un examen importante"},
+				{Value: "improve_grades", Label: "Mejorar mis calificaciones generales"},
+				{Value: "learn_new_topic", Label: "Explorar nuevas materias"},
 				{Value: "prepare_university", Label: "Prepararme para la universidad"},
-			},
-		},
-		{
-			ID:       "secondary_goal",
-			Text:     "¿Tienes un objetivo secundario? (Opcional)",
-			Type:     "select",
-			Required: false,
-			Options: []models.OptionInfo{
-				{Value: "pass_exam", Label: "Aprobar un examen específico"},
-				{Value: "reinforce_course", Label: "Reforzar conocimientos de un curso"},
-				{Value: "learn_new_topic", Label: "Aprender un tema nuevo"},
-				{Value: "improve_grades", Label: "Mejorar mis calificaciones"},
-				{Value: "prepare_university", Label: "Prepararme para la universidad"},
+				{Value: "reinforce_course", Label: "Reforzar lo que ya sé"},
 			},
 		},
 		{
 			ID:       "current_level",
-			Text:     "¿En qué nivel académico te encuentras? (Opcional)",
+			Text:     "¿En qué etapa de tu educación te encuentras?",
 			Type:     "select",
-			Required: false,
+			Required: true,
 			Options: []models.OptionInfo{
-				{Value: "primary", Label: "Primaria"},
-				{Value: "secondary", Label: "Secundaria"},
-				{Value: "high_school", Label: "Preparatoria"},
-				{Value: "university", Label: "Universidad"},
-				{Value: "other", Label: "Otro"},
+				{Value: "secondary", Label: "Secundaria - Construyendo bases sólidas"},
+				{Value: "high_school", Label: "Preparatoria - Preparándome para el siguiente nivel"},
+				{Value: "university", Label: "Universidad - Especializándome"},
+				{Value: "other", Label: "Otro - Aprendizaje continuo"},
 			},
 		},
 		{
 			ID:       "subjects_of_interest",
-			Text:     "¿Qué materias te interesan más? (Opcional, puedes seleccionar varias)",
+			Text:     "¿Qué materias te llaman más la atención?",
 			Type:     "multiple",
 			Required: false,
 			Options: []models.OptionInfo{
-				{Value: "mathematics", Label: "Matemáticas"},
-				{Value: "physics", Label: "Física"},
-				{Value: "chemistry", Label: "Química"},
-				{Value: "biology", Label: "Biología"},
-				{Value: "spanish", Label: "Español"},
-				{Value: "english", Label: "Inglés"},
-				{Value: "history", Label: "Historia"},
-				{Value: "geography", Label: "Geografía"},
-				{Value: "computer_science", Label: "Informática"},
-				{Value: "arts", Label: "Artes"},
+				{Value: "mathematics", Label: "Matemáticas - Lógica y resolución de problemas"},
+				{Value: "sciences", Label: "Ciencias - Física, Química, Biología"},
+				{Value: "languages", Label: "Idiomas - Español, Inglés, otros"},
+				{Value: "social", Label: "Ciencias Sociales - Historia, Geografía"},
+				{Value: "technology", Label: "Tecnología - Informática, Programación"},
+				{Value: "arts", Label: "Artes - Creatividad y expresión"},
 			},
 		},
 		{
 			ID:       "additional_comments",
-			Text:     "¿Hay algo más que te gustaría que sepamos? (Opcional)",
+			Text:     "¿Tienes algún desafío específico que te gustaría abordar?",
 			Type:     "text",
 			Required: false,
 		},
@@ -276,20 +256,6 @@ func (s *questionnaireService) validateInitialQuestionnaireRequest(request *mode
 		return errors.New("invalid primary goal")
 	}
 
-	// Validar objetivo secundario si está presente
-	if request.SecondaryGoal != nil {
-		isValidSecondaryGoal := false
-		for _, valid := range validGoals {
-			if *request.SecondaryGoal == valid {
-				isValidSecondaryGoal = true
-				break
-			}
-		}
-		
-		if !isValidSecondaryGoal {
-			return errors.New("invalid secondary goal")
-		}
-	}
 
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"backend-academi/internal/models"
 	"backend-academi/internal/services"
+	"backend-academi/pkg/utils"
 )
 
 // QuestionnaireHandler maneja las rutas relacionadas con cuestionarios
@@ -38,12 +39,14 @@ func (h *QuestionnaireHandler) GetInitialQuestionnaire(w http.ResponseWriter, r 
 
 // SubmitInitialQuestionnaire maneja POST /api/v1/questionnaire/initial/submit
 func (h *QuestionnaireHandler) SubmitInitialQuestionnaire(w http.ResponseWriter, r *http.Request) {
-	// Obtener el user ID del contexto (viene del middleware de auth)
-	userID, ok := r.Context().Value("user_id").(uint)
+	// Obtener las claims del contexto
+	claims, ok := r.Context().Value("user_claims").(*utils.Claims)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
+	
+	userID := claims.UserID
 
 	// Decodificar el request
 	var request models.InitialQuestionnaireRequest
@@ -78,12 +81,14 @@ func (h *QuestionnaireHandler) SubmitInitialQuestionnaire(w http.ResponseWriter,
 
 // CheckInitialCompletion maneja GET /api/v1/questionnaire/initial/status
 func (h *QuestionnaireHandler) CheckInitialCompletion(w http.ResponseWriter, r *http.Request) {
-	// Obtener el user ID del contexto
-	userID, ok := r.Context().Value("user_id").(uint)
+	// Obtener las claims del contexto
+	claims, ok := r.Context().Value("user_claims").(*utils.Claims)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
+	
+	userID := claims.UserID
 
 	hasCompleted, err := h.questionnaireService.HasUserCompletedInitial(userID)
 	if err != nil {
@@ -101,12 +106,14 @@ func (h *QuestionnaireHandler) CheckInitialCompletion(w http.ResponseWriter, r *
 
 // GetUserInitialResponse maneja GET /api/v1/questionnaire/initial/response
 func (h *QuestionnaireHandler) GetUserInitialResponse(w http.ResponseWriter, r *http.Request) {
-	// Obtener el user ID del contexto
-	userID, ok := r.Context().Value("user_id").(uint)
+	// Obtener las claims del contexto
+	claims, ok := r.Context().Value("user_claims").(*utils.Claims)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
+	
+	userID := claims.UserID
 
 	response, err := h.questionnaireService.GetUserInitialResponse(userID)
 	if err != nil {
