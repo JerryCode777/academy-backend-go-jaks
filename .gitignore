@@ -63,3 +63,5 @@ config/local.json
 
 # Docker
 docker-compose.override.yml
+
+CLAUDE.md
