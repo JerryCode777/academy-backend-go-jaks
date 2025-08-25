@@ -64,12 +64,16 @@ func main() {
 	// 6. Inicializar middleware
 	authMiddleware := middleware.NewAuthMiddleware(authService, jwtService)
 	corsMiddleware := middleware.NewCORSMiddleware()
+	loggingMiddleware := middleware.NewLoggingMiddleware()
 
 	// 7. Configurar router y rutas
 	router := mux.NewRouter()
 	
 	// CORS para permitir conexiones desde web
 	router.Use(corsMiddleware.Handler)
+	
+	// Logging middleware para ver todas las requests HTTP (estilo Django)
+	router.Use(loggingMiddleware.Handler)
 	
 	// Rutas básicas (de conexion-frontend)
 	router.HandleFunc("/", basicHandler.Home).Methods("GET")
@@ -112,8 +116,10 @@ func main() {
 	// 8. Configurar servidor
 	serverAddr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 	
-	log.Printf("🚀 Servidor iniciando en %s", serverAddr)
-	log.Printf("Rutas disponibles:")
+	// Usar la función de logging para startup más limpio
+	middleware.LogServerStartup(config.Server.Host, config.Server.Port, config.Server.APIBasePath)
+	
+	log.Printf("[ROUTES] Endpoints disponibles:")
 	log.Printf("   GET  / - Página de inicio")
 	log.Printf("   GET  /health - Health check")
 	log.Printf("   GET  %s/test - Endpoint de prueba", config.Server.APIBasePath)
