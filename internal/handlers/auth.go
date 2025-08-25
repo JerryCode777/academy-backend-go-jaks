@@ -22,8 +22,9 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 
 // Register maneja el endpoint POST /api/auth/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	// 1. Verificar Content-Type
-	if r.Header.Get("Content-Type") != "application/json" {
+	// 1. Verificar Content-Type (permitir charset)
+	contentType := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "application/json") {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
 		return
 	}
@@ -56,8 +57,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login maneja el endpoint POST /api/auth/login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	// 1. Verificar Content-Type
-	if r.Header.Get("Content-Type") != "application/json" {
+	// 1. Verificar Content-Type (permitir charset)
+	contentType := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "application/json") {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
 		return
 	}
@@ -120,7 +122,8 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 // RefreshToken maneja el endpoint POST /api/auth/refresh
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
+	contentType := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "application/json") {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
 		return
 	}
