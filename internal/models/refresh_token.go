@@ -8,10 +8,10 @@ import (
 type RefreshToken struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Token     string    `json:"token" gorm:"unique;not null;index"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
+	UserID    uint      `json:"userId" gorm:"not null"`
 	User      User      `json:"user" gorm:"foreignKey:UserID"`
-	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`
-	IsRevoked bool      `json:"is_revoked" gorm:"default:false"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ExpiresAt time.Time `json:"expiresAt" gorm:"not null"`
+	IsRevoked bool      `json:"isRevoked" gorm:"default:false"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }

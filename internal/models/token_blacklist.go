@@ -9,7 +9,7 @@ type TokenBlacklist struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	JTI       string    `json:"jti" gorm:"unique;not null;index"` // JWT ID claim
 	Token     string    `json:"token" gorm:"not null;index"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
-	ExpiresAt time.Time `json:"expires_at" gorm:"not null;index"`
-	CreatedAt time.Time `json:"created_at"`
+	UserID    uint      `json:"userId" gorm:"not null"`
+	ExpiresAt time.Time `json:"expiresAt" gorm:"not null;index"`
+	CreatedAt time.Time `json:"createdAt"`
 }

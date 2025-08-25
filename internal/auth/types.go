@@ -22,12 +22,12 @@ type RegisterRequest struct {
 // LoginResponse representa la respuesta después del login
 type LoginResponse struct {
 	Token        string       `json:"token"`
-	RefreshToken string       `json:"refresh_token"`
+	RefreshToken string       `json:"refreshToken"`
 	User         models.User  `json:"user"`
-	ExpiresAt    time.Time    `json:"expires_at"`
+	ExpiresAt    time.Time    `json:"expiresAt"`
 }
 
 // RefreshTokenRequest representa la solicitud de refresh token
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
+	RefreshToken string `json:"refreshToken" validate:"required"`
 }

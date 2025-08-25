@@ -25,10 +25,10 @@ func NewJWTService(secretKey, issuer string) *JWTService {
 
 // Claims representa los claims del JWT con información del usuario
 type Claims struct {
-	UserID    uint            `json:"user_id"`
+	UserID    uint            `json:"userId"`
 	Email     string          `json:"email"`
-	FirstName string          `json:"first_name"`
-	LastName  string          `json:"last_name"`
+	FirstName string          `json:"firstName"`
+	LastName  string          `json:"lastName"`
 	Role      models.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
