@@ -26,6 +26,13 @@ const (
 type StudyGoalType string
 
 const (
+	UNSAAdmissionGoal StudyGoalType = "unsa_admission"
+	OtherNationalUniversityGoal StudyGoalType = "other_national_university"
+	PrivateUniversityGoal StudyGoalType = "private_university"
+	ImproveExamScoresGoal StudyGoalType = "improve_exam_scores"
+	ReinforceKnowledgeGoal StudyGoalType = "reinforce_knowledge"
+	
+	// Mantener compatibilidad con versiones anteriores
 	PassExamGoal StudyGoalType = "pass_exam"
 	ReinforceCourseGoal StudyGoalType = "reinforce_course"
 	LearnNewTopicGoal StudyGoalType = "learn_new_topic"
@@ -39,42 +46,44 @@ type Questionnaire struct {
 	Type        QuestionnaireType `json:"type" gorm:"not null"`
 	Title       string            `json:"title" gorm:"not null"`
 	Description string            `json:"description" gorm:"text"`
-	IsActive    bool              `json:"is_active" gorm:"default:true"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
+	IsActive    bool              `json:"isActive" gorm:"default:true"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	UpdatedAt   time.Time         `json:"updatedAt"`
 }
 
 // QuestionnaireResponse representa las respuestas de un usuario a un cuestionario
 type QuestionnaireResponse struct {
 	ID              uint                `json:"id" gorm:"primaryKey"`
-	UserID          uint                `json:"user_id" gorm:"not null"`
+	UserID          uint                `json:"userId" gorm:"not null"`
 	User            User                `json:"user" gorm:"foreignKey:UserID"`
-	QuestionnaireID uint                `json:"questionnaire_id" gorm:"not null"`
+	QuestionnaireID uint                `json:"questionnaireId" gorm:"not null"`
 	Questionnaire   Questionnaire       `json:"questionnaire" gorm:"foreignKey:QuestionnaireID"`
 	
 	// Respuestas específicas del cuestionario inicial
-	StudyHoursPerDay    int                 `json:"study_hours_per_day" gorm:"not null"`
-	TimePreference      StudyTimePreference `json:"time_preference" gorm:"not null"`
-	PrimaryGoal         StudyGoalType       `json:"primary_goal" gorm:"not null"`
+	StudyHoursPerDay    int                 `json:"studyHoursPerDay" gorm:"not null"`
+	TimePreference      StudyTimePreference `json:"timePreference" gorm:"not null"`
+	PrimaryGoal         StudyGoalType       `json:"primaryGoal" gorm:"not null"`
 	
 	// Campos adicionales
-	CurrentLevel        string              `json:"current_level" gorm:"not null"`    // Nivel académico actual
-	SubjectsOfInterest  string              `json:"subjects_of_interest" gorm:"text"` // JSON array de materias
-	AdditionalComments  string              `json:"additional_comments" gorm:"text"`  // Comentarios adicionales
+	CurrentLevel             string              `json:"currentLevel" gorm:"not null"`    // Nivel académico actual
+	SubjectsOfInterest       string              `json:"subjectsOfInterest" gorm:"text"` // JSON array de materias
+	ExamPreparationExperience string             `json:"examPreparationExperience" gorm:"not null"` // Experiencia en preparación
+	AdditionalComments       string              `json:"additionalComments" gorm:"text"`  // Comentarios adicionales
 	
-	CompletedAt         time.Time           `json:"completed_at"`
-	CreatedAt           time.Time           `json:"created_at"`
-	UpdatedAt           time.Time           `json:"updated_at"`
+	CompletedAt         time.Time           `json:"completedAt"`
+	CreatedAt           time.Time           `json:"createdAt"`
+	UpdatedAt           time.Time           `json:"updatedAt"`
 }
 
 // InitialQuestionnaireRequest estructura para recibir las respuestas del cuestionario inicial
 type InitialQuestionnaireRequest struct {
-	StudyHoursPerDay   int                 `json:"study_hours_per_day" validate:"required,min=1,max=12"`
-	TimePreference     StudyTimePreference `json:"time_preference" validate:"required"`
-	PrimaryGoal        StudyGoalType       `json:"primary_goal" validate:"required"`
-	CurrentLevel       string              `json:"current_level" validate:"required"`
-	SubjectsOfInterest []string            `json:"subjects_of_interest,omitempty"`
-	AdditionalComments string              `json:"additional_comments,omitempty"`
+	StudyHoursPerDay          int                 `json:"studyHoursPerDay" validate:"required,min=1,max=12"`
+	TimePreference            StudyTimePreference `json:"timePreference" validate:"required"`
+	PrimaryGoal               StudyGoalType       `json:"primaryGoal" validate:"required"`
+	CurrentLevel              string              `json:"currentLevel" validate:"required"`
+	SubjectsOfInterest        []string            `json:"subjectsOfInterest,omitempty"`
+	ExamPreparationExperience string              `json:"examPreparationExperience" validate:"required"`
+	AdditionalComments        string              `json:"additionalComments,omitempty"`
 }
 
 // QuestionnaireInfo estructura para enviar información del cuestionario al frontend

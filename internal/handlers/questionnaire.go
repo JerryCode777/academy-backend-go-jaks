@@ -100,7 +100,7 @@ func (h *QuestionnaireHandler) CheckInitialCompletion(w http.ResponseWriter, r *
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":      true,
 		"message":      "Questionnaire status obtained successfully",
-		"has_completed": hasCompleted,
+		"hasCompleted": hasCompleted,
 	})
 }
 
