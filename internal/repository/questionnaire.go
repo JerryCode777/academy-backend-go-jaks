@@ -13,8 +13,8 @@ import (
 type QuestionnaireRepository interface {
 	GetByType(questionnaireType models.QuestionnaireType) (*models.Questionnaire, error)
 	CreateResponse(response *models.QuestionnaireResponse) error
-	GetUserResponse(userID uint, questionnaireID uint) (*models.QuestionnaireResponse, error)
-	HasUserCompletedQuestionnaire(userID uint, questionnaireType models.QuestionnaireType) (bool, error)
+	GetStudentResponse(studentID uint, questionnaireID uint) (*models.QuestionnaireResponse, error)
+	HasStudentCompletedQuestionnaire(studentID uint, questionnaireType models.QuestionnaireType) (bool, error)
 	CreateInitialQuestionnaire() error
 }
 
@@ -61,12 +61,12 @@ func (r *questionnaireRepository) CreateResponse(response *models.QuestionnaireR
 	return r.db.Create(response).Error
 }
 
-// GetUserResponse obtiene la respuesta de un usuario para un cuestionario específico
-func (r *questionnaireRepository) GetUserResponse(userID uint, questionnaireID uint) (*models.QuestionnaireResponse, error) {
+// GetStudentResponse obtiene la respuesta de un estudiante para un cuestionario específico
+func (r *questionnaireRepository) GetStudentResponse(studentID uint, questionnaireID uint) (*models.QuestionnaireResponse, error) {
 	var response models.QuestionnaireResponse
 	
-	err := r.db.Where("user_id = ? AND questionnaire_id = ?", userID, questionnaireID).
-		Preload("User").
+	err := r.db.Where("student_id = ? AND questionnaire_id = ?", studentID, questionnaireID).
+		Preload("Student").
 		Preload("Questionnaire").
 		First(&response).Error
 		
@@ -77,13 +77,13 @@ func (r *questionnaireRepository) GetUserResponse(userID uint, questionnaireID u
 	return &response, nil
 }
 
-// HasUserCompletedQuestionnaire verifica si un usuario ha completado un tipo de cuestionario
-func (r *questionnaireRepository) HasUserCompletedQuestionnaire(userID uint, questionnaireType models.QuestionnaireType) (bool, error) {
+// HasStudentCompletedQuestionnaire verifica si un estudiante ha completado un tipo de cuestionario
+func (r *questionnaireRepository) HasStudentCompletedQuestionnaire(studentID uint, questionnaireType models.QuestionnaireType) (bool, error) {
 	var count int64
 	
 	err := r.db.Table("questionnaire_responses").
 		Joins("JOIN questionnaires ON questionnaire_responses.questionnaire_id = questionnaires.id").
-		Where("questionnaire_responses.user_id = ? AND questionnaires.type = ?", userID, questionnaireType).
+		Where("questionnaire_responses.student_id = ? AND questionnaires.type = ?", studentID, questionnaireType).
 		Count(&count).Error
 		
 	if err != nil {

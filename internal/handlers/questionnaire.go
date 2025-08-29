@@ -46,7 +46,7 @@ func (h *QuestionnaireHandler) SubmitInitialQuestionnaire(w http.ResponseWriter,
 		return
 	}
 	
-	userID := claims.UserID
+	studentID := claims.UserID // UserID del JWT corresponde al StudentID
 
 	// Decodificar el request
 	var request models.InitialQuestionnaireRequest
@@ -56,9 +56,9 @@ func (h *QuestionnaireHandler) SubmitInitialQuestionnaire(w http.ResponseWriter,
 	}
 
 	// Procesar la respuesta
-	if err := h.questionnaireService.SubmitInitialQuestionnaire(userID, &request); err != nil {
+	if err := h.questionnaireService.SubmitInitialQuestionnaire(studentID, &request); err != nil {
 		// Diferentes códigos de error según el tipo
-		if err.Error() == "user has already completed the initial questionnaire" {
+		if err.Error() == "student has already completed the initial questionnaire" {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -88,9 +88,9 @@ func (h *QuestionnaireHandler) CheckInitialCompletion(w http.ResponseWriter, r *
 		return
 	}
 	
-	userID := claims.UserID
+	studentID := claims.UserID // UserID del JWT corresponde al StudentID
 
-	hasCompleted, err := h.questionnaireService.HasUserCompletedInitial(userID)
+	hasCompleted, err := h.questionnaireService.HasStudentCompletedInitial(studentID)
 	if err != nil {
 		http.Error(w, "Error checking questionnaire status: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -113,9 +113,9 @@ func (h *QuestionnaireHandler) GetUserInitialResponse(w http.ResponseWriter, r *
 		return
 	}
 	
-	userID := claims.UserID
+	studentID := claims.UserID // UserID del JWT corresponde al StudentID
 
-	response, err := h.questionnaireService.GetUserInitialResponse(userID)
+	response, err := h.questionnaireService.GetStudentInitialResponse(studentID)
 	if err != nil {
 		http.Error(w, "Error obtaining user response: "+err.Error(), http.StatusNotFound)
 		return

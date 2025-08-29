@@ -11,9 +11,9 @@ import (
 // QuestionnaireService interfaz para el servicio de cuestionarios
 type QuestionnaireService interface {
 	GetInitialQuestionnaire() (*models.QuestionnaireInfo, error)
-	SubmitInitialQuestionnaire(userID uint, request *models.InitialQuestionnaireRequest) error
-	HasUserCompletedInitial(userID uint) (bool, error)
-	GetUserInitialResponse(userID uint) (*models.QuestionnaireResponse, error)
+	SubmitInitialQuestionnaire(studentID uint, request *models.InitialQuestionnaireRequest) error
+	HasStudentCompletedInitial(studentID uint) (bool, error)
+	GetStudentInitialResponse(studentID uint) (*models.QuestionnaireResponse, error)
 }
 
 // questionnaireService implementación del servicio
@@ -53,9 +53,9 @@ func (s *questionnaireService) GetInitialQuestionnaire() (*models.QuestionnaireI
 }
 
 // SubmitInitialQuestionnaire procesa y guarda las respuestas del cuestionario inicial
-func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *models.InitialQuestionnaireRequest) error {
-	// Verificar que el usuario existe
-	user, err := s.userRepo.GetByID(userID)
+func (s *questionnaireService) SubmitInitialQuestionnaire(studentID uint, request *models.InitialQuestionnaireRequest) error {
+	// Verificar que el estudiante existe (a través de su usuario)
+	user, err := s.userRepo.GetByID(studentID)
 	if err != nil {
 		return fmt.Errorf("user not found: %w", err)
 	}
@@ -66,14 +66,14 @@ func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *
 		return fmt.Errorf("initial questionnaire not found: %w", err)
 	}
 
-	// Verificar si el usuario ya completó el cuestionario
-	hasCompleted, err := s.questionnaireRepo.HasUserCompletedQuestionnaire(userID, models.InitialQuestionnaireType)
+	// Verificar si el estudiante ya completó el cuestionario
+	hasCompleted, err := s.questionnaireRepo.HasStudentCompletedQuestionnaire(studentID, models.InitialQuestionnaireType)
 	if err != nil {
 		return fmt.Errorf("error checking questionnaire completion: %w", err)
 	}
 
 	if hasCompleted {
-		return errors.New("user has already completed the initial questionnaire")
+		return errors.New("student has already completed the initial questionnaire")
 	}
 
 	// Validar la request
@@ -89,7 +89,7 @@ func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *
 
 	// Crear la respuesta
 	response := &models.QuestionnaireResponse{
-		UserID:             userID,
+		StudentID:          studentID,
 		QuestionnaireID:    questionnaire.ID,
 		StudyHoursPerDay:   request.StudyHoursPerDay,
 		TimePreference:     request.TimePreference,
@@ -106,7 +106,7 @@ func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *
 
 	// Actualizar el perfil del estudiante si existe
 	if user.Role == models.StudentRole {
-		if err := s.updateStudentProfile(userID, request); err != nil {
+		if err := s.updateStudentProfile(studentID, request); err != nil {
 			// Log el error pero no fallar la operación principal
 			fmt.Printf("Warning: Could not update student profile: %v\n", err)
 		}
@@ -115,21 +115,21 @@ func (s *questionnaireService) SubmitInitialQuestionnaire(userID uint, request *
 	return nil
 }
 
-// HasUserCompletedInitial verifica si el usuario completó el cuestionario inicial
-func (s *questionnaireService) HasUserCompletedInitial(userID uint) (bool, error) {
-	return s.questionnaireRepo.HasUserCompletedQuestionnaire(userID, models.InitialQuestionnaireType)
+// HasStudentCompletedInitial verifica si el estudiante completó el cuestionario inicial
+func (s *questionnaireService) HasStudentCompletedInitial(studentID uint) (bool, error) {
+	return s.questionnaireRepo.HasStudentCompletedQuestionnaire(studentID, models.InitialQuestionnaireType)
 }
 
-// GetUserInitialResponse obtiene la respuesta del usuario al cuestionario inicial
-func (s *questionnaireService) GetUserInitialResponse(userID uint) (*models.QuestionnaireResponse, error) {
+// GetStudentInitialResponse obtiene la respuesta del estudiante al cuestionario inicial
+func (s *questionnaireService) GetStudentInitialResponse(studentID uint) (*models.QuestionnaireResponse, error) {
 	questionnaire, err := s.questionnaireRepo.GetByType(models.InitialQuestionnaireType)
 	if err != nil {
 		return nil, fmt.Errorf("initial questionnaire not found: %w", err)
 	}
 
-	response, err := s.questionnaireRepo.GetUserResponse(userID, questionnaire.ID)
+	response, err := s.questionnaireRepo.GetStudentResponse(studentID, questionnaire.ID)
 	if err != nil {
-		return nil, fmt.Errorf("user response not found: %w", err)
+		return nil, fmt.Errorf("student response not found: %w", err)
 	}
 
 	return response, nil
@@ -261,7 +261,7 @@ func (s *questionnaireService) validateInitialQuestionnaireRequest(request *mode
 }
 
 // updateStudentProfile actualiza el perfil del estudiante con información del cuestionario
-func (s *questionnaireService) updateStudentProfile(userID uint, request *models.InitialQuestionnaireRequest) error {
+func (s *questionnaireService) updateStudentProfile(studentID uint, request *models.InitialQuestionnaireRequest) error {
 	// Esta función se puede implementar más tarde cuando tengamos más lógica de estudiantes
 	// Por ahora solo retornamos nil
 	return nil

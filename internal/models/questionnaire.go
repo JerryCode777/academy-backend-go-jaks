@@ -44,11 +44,11 @@ type Questionnaire struct {
 	UpdatedAt   time.Time         `json:"updated_at"`
 }
 
-// QuestionnaireResponse representa las respuestas de un usuario a un cuestionario
+// QuestionnaireResponse representa las respuestas de un estudiante a un cuestionario
 type QuestionnaireResponse struct {
 	ID              uint                `json:"id" gorm:"primaryKey"`
-	UserID          uint                `json:"user_id" gorm:"not null"`
-	User            User                `json:"user" gorm:"foreignKey:UserID"`
+	StudentID       uint                `json:"student_id" gorm:"not null"`
+	Student         Student             `json:"student" gorm:"foreignKey:StudentID"`
 	QuestionnaireID uint                `json:"questionnaire_id" gorm:"not null"`
 	Questionnaire   Questionnaire       `json:"questionnaire" gorm:"foreignKey:QuestionnaireID"`
 	
