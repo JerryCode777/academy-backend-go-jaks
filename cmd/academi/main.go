@@ -142,14 +142,45 @@ func main() {
 func runMigrations(db *gorm.DB) error {
 	log.Println("Ejecutando migraciones de base de datos...")
 	
-	// GORM creará las tablas automáticamente basándose en los modelos
-	return db.AutoMigrate(
+	// 1. Ejecutar migraciones automáticas (campos nuevos)
+	if err := db.AutoMigrate(
+		// Auth & Users
 		&models.User{},
 		&models.Student{},
 		&models.RefreshToken{},
 		&models.TokenBlacklist{},
+		
+		// Onboarding
 		&models.Questionnaire{},
 		&models.QuestionnaireResponse{},
-		// TODO: Agregar más modelos cuando se implementen (Course, Quiz, etc.)
-	)
+		
+		// Academic Structure
+		&models.University{},
+		&models.Course{},
+		&models.Topic{},
+		
+		// Questions (Base reutilizable)
+		&models.Question{},
+		&models.QuestionOption{},
+		
+		// Quiz System (Dynamic)
+		&models.QuizTemplate{},
+		&models.QuizInstance{},
+		&models.QuizInstanceQuestion{},
+		&models.QuizAttempt{},
+		&models.QuizResponse{},
+		
+		// Student Progress (Lightweight)
+		&models.StudentEnrollment{},
+		&models.StudentTopicProgress{},
+	); err != nil {
+		return err
+	}
+
+	// 2. Ejecutar migraciones manuales (eliminar campos)
+	if err := database.DropColumnsManual(db); err != nil {
+		return err
+	}
+
+	return nil
 }
