@@ -30,11 +30,12 @@ const (
 type Student struct {
 	ID           uint      `json:"id" gorm:"primaryKey"`
 	UserID       uint      `json:"userId" gorm:"not null"`
-	User         User      `json:"user" gorm:"foreignKey:UserID"`
-	Grade        int       `json:"grade"`                    // Grado académico
-	Institution  string    `json:"institution"`              // Institución educativa
-	TargetCareer string    `json:"targetCareer"`            // Carrera objetivo
-	StudyGoals   string    `json:"studyGoals" gorm:"text"`  // Metas de estudio
+	User         User      `json:"user" gorm:"foreignKey:UserID"` // Grado académico
+	Institution  string    `json:"institution"`                   // Institución educativa
+	TargetCareer string    `json:"targetCareer"`                  // Carrera objetivo
+	StudyGoals   string    `json:"studyGoals" gorm:"text"`        // Metas de estudio
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
+	Level        int       `json:"level"`
+	Points       int       `json:"points"`
 }
